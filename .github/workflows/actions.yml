@@ -1,0 +1,46 @@
+name: learn-github-actions
+on: [push]
+jobs:
+  Build_PDFs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update packages
+        run: sudo apt-get update && sudo apt-get upgrade -y
+
+      - name: Install pandoc & fonts
+        run: sudo apt-get install -y pandoc texlive-xetex texlive-fonts-extra texlive-fonts-recommended
+
+      - name: Install Quarto
+        run: |
+          wget https://github.com/quarto-dev/quarto-cli/releases/download/v0.9.442/quarto-0.9.442-linux-amd64.deb
+          sudo dpkg -i quarto-0.9.442-linux-amd64.deb
+
+      - name: Install SSH Key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Python requirements
+        run: pip3 install -r requirements.txt
+
+      - name: Run pandoc
+        shell: bash
+        run: |
+          chmod +x ./generate_pdf.bash
+          ./generate_pdf.bash
+
+      - name: Run Quarto
+        shell: bash
+        run: |
+          chmod +x ./generate_pdf.bash
+          ./generate_pdf.bash
+
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pdf_output
+          path: |
+            *.pdf
